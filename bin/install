@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+get_download_file_path() {
+  local install_type=${1}
+  local version=${2}
+  local tmp_download_dir=${3}
+
+  local pkg_name="kafka-${version}.tgz"
+
+  echo "${tmp_download_dir}/${pkg_name}"
+}
+
+untar_path() {
+  local install_type=${1}
+  local version=${2}
+  local tmp_download_dir=${3}
+
+  echo "${tmp_download_dir}/kafka_2.12-${version}"
+}
+
+download_source() {
+  local install_type=${1}
+  local version=${2}
+  local download_path=${3}
+  local download_url=$(get_download_url ${install_type} ${version})
+
+  curl -sLo ${download_path} -C - ${download_url}
+}
+
+get_download_url() {
+  local install_type=${1}
+  local version=${2}
+
+  echo "http://mirrors.gigenet.com/apache/kafka/${version}/kafka_2.12-${version}.tgz"
+}
+
+install_kafka() {
+  local install_type=${1}
+  local version=${2}
+  local install_path=${3}
+
+  if [ "${TMPDIR}" = "" ]; then
+    local tmp_download_dir=$(mktemp -d)
+  else
+    local tmp_download_dir=${TMPDIR}
+  fi
+
+  local source_path=$(get_download_file_path ${install_type} ${version} ${tmp_download_dir})
+
+  download_source ${install_type} ${version} ${source_path}
+
+  # running this in a subshell
+  # because we don't want to disturb current working dir
+  (
+    cd $(dirname ${source_path})
+
+    tar zxf ${source_path} || exit 1
+
+    cd $(untar_path ${install_type} ${version} ${tmp_download_dir})
+
+    # Remove windows related files
+    find . -name "*.exe" -print0 | xargs -0 rm
+    find . -name "*.bat" -print0 | xargs -0 rm
+
+    mv ./* ${ASDF_INSTALL_PATH} || exit 1
+  )
+}
+
+install_kafka ${ASDF_INSTALL_TYPE} ${ASDF_INSTALL_VERSION} ${ASDF_INSTALL_PATH}
+

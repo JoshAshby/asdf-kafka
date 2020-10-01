@@ -6,7 +6,7 @@ currently.
 
 ## Install
 ```
-asdf plugin-add elasticsearch https://github.com/mikestephens/asdf-elasticsearch.git
+asdf plugin-add kafka https://github.com/JoshAshby/asdf-kafka.git
 ```
 
 See the [asdf](https://github.com/asdf-vm/asdf) readme for instructions on how to install & manage versions of kafka.
